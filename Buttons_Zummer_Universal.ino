@@ -100,7 +100,7 @@ switch(button[n]){
   }//if digRead
   break;
   case 10: // подождем дребезг нажатия
-  if((ms - buttonMs[n]) > 0){ // if hard keys need at least 10
+  if((ms - buttonMs[n]) > 2){ // if hard keys need at least 10
     buttonMs[n] = ms;
     if(digitalRead(key[n])== ACTIVE){
       button[n] = 13;
@@ -110,27 +110,30 @@ switch(button[n]){
     }
   }//if ms
   break;
-  case 13: // ловим когда кнопку отпустят
-    if(digitalRead(key[n])!= ACTIVE){
+  case 13: // ловим когда кнопку отпустят и делаем вывод какое нажатие
+     if(((ms - buttonTimeCounter[n]) > 500) && (!pressed)){ // если удлинненное нажатие
+      pressed = 1; // предупреждаем следующий кейс - было длит нажатие кнопки
+      KeyDetected[n] = LONG; //глобальный флаг - длинное нажатие 
+    } else if(((ms - buttonTimeCounter[n]) > 2000) && (pressed == 1)){ // если совсем не отпускают
+      pressed = 2; // предупреждаем следующий кейс - было удержание кнопки
+      KeyDetected[n] = FLOW; //глобальный флаг - удержание
+    }
+    if(digitalRead(key[n])!= ACTIVE){ // как только отпустили
+      buttonTimeCounter[n] = ms;
       buttonMs[n] = ms;
       button[n] = 16;
     }//if not active
   break;
-  case 16: // подождем дребезг отпускания и делаем вывод какое нажатие
-  if((ms - buttonMs[n]) > 0){ // if hard keys need at least 10
+  case 16: // подождем дребезг отпускания 
+  if((ms - buttonMs[n]) > 2){ // if hard keys need at least 10
     buttonMs[n] = ms;
     if(digitalRead(key[n])!= ACTIVE){
-      if((ms - buttonTimeCounter[n]) < 300){ // если короткое нажатие
-        KeyDetected[n] = SHORT;
-        shortZum[n] = 1; // пищать 
-        //button[n] = 20; // GO
-      } else if((ms - buttonTimeCounter[n]) < 3000){ // если удлинненное нажатие
-        KeyDetected[n] = LONG;
-        longZum = 1; // пищать
-        //button[n] = 25; // GO
-      } else { // если дольше 3 секунд
-        // пока ничего 
-      }
+      if(!pressed){
+        KeyDetected[n] = SHORT; //глобальный флаг - короткое нажатие 
+        shortZum[n] = 1; // пищать
+      } else { 
+        pressed = 0; // сброс локального флага
+      }// if not long pressed
       button[n] = 0; // на исходную
     }//if not active
   }//if ms
